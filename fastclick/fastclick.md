@@ -18,10 +18,10 @@
 - 所有版本的Android Chrome浏览器，如果设置viewport meta的值有user-scalable=no，浏览器也是会马上出发点击事件。
 - IE11+浏览器设置了css的属性touch-action: manipulation，它会在某些标签（a，button等）禁止双击事件，IE10的为-ms-touch-action: manipulation
 ## 使用方法：
-```
-import FastClick from 'fastclick'
-FastClick.attach(document.body)
-```
+	```
+	import FastClick from 'fastclick'
+	FastClick.attach(document.body)
+	```
 ## node:
 - 立即执行函数构建独立空间作用域。
 - 最开始的分号，防止前面代码没有写分号，解析出错。
