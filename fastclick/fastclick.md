@@ -51,7 +51,7 @@
 	```
 - updateScrollParent
 ## 源码解析
-
+```
 ;(function () {
 	'use strict';
 	/**
@@ -883,3 +883,4 @@
 		window.FastClick = FastClick;
 	}
 }());
+```
