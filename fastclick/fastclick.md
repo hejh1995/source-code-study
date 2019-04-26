@@ -14,7 +14,7 @@
 ## 哪些情况不需要用？
 - PC 浏览器
 - Android版Chrome 32+浏览器，如果设置viewport meta的值为width=device-width，这种情况下浏览器会马上出发点击事件，不会延迟300毫秒。
-<meta name="viewport" content="width=device-width, initial-scale=1">
+```<meta name="viewport" content="width=device-width, initial-scale=1">```
 - 所有版本的Android Chrome浏览器，如果设置viewport meta的值有user-scalable=no，浏览器也是会马上出发点击事件。
 - IE11+浏览器设置了css的属性touch-action: manipulation，它会在某些标签（a，button等）禁止双击事件，IE10的为-ms-touch-action: manipulation
 ## 使用方法：
