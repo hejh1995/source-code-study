@@ -22,26 +22,41 @@
 import FastClick from 'fastclick'
 FastClick.attach(document.body)
 ```
+## node:
+- 立即执行函数构建独立空间作用域。
+- 最开始的分号，防止前面代码没有写分号，解析出错。
+- 注释
+- Node.prototype.removeEventListener------?
+- navigator.userAgent
+- 手机设备判断：
+- 为一个元素添加onclick事件，要考虑这个元素上面是否有onclick事件，如果有，先将他对应的时间添加到AddEventListener里面，再把onclick清空，即设置为null，因为onclick事件只能执行一个事件函数，AddEventListener，可以执行多个事件函数。
+- needsClick：对于disable的textarea，和input， 还有 input的type为file且为ios6，video标签，直接返回true，其他根据class中是否有needsClick 关键字判断。
+- needsFocus：对于一些不能focus的元素返回false，其他也是用className判断。
+- document.activeElement -- 获得当前获得焦点的元素。安卓有些设备获得焦点的元素必须得blur了才可以click。document.activeElement.blur()
+- 自定义事件方法：
+		clickEvent = document.createEvent('MouseEvents');
+		// initMouseEvent 该特性已经从 Web 标准中删除
+		clickEvent.initMouseEvent(this.determineEventType(targetElement), true, true, window, 1, touch.screenX, touch.screenY, touch.clientX, touch.clientY, false, false, false, false, 0, null);
+		// 给这个事件加的标签，方便跟踪。
+		clickEvent.forwardedTouchEvent = true;
+		targetElement.dispatchEvent(clickEvent);
+- 现在比较推荐的自定义事件方法：
+	```
+	//直接用构造函数
+	var event = new Event('build');
+	// Listen for the event.
+	elem.addEventListener('build', function (e) { ... }, false);
+	// Dispatch the event.
+	elem.dispatchEvent(event);
+	```
+- updateScrollParent
 ## 源码解析
 
 ;(function () {
 	'use strict';
-
-	/**
-	 * @preserve FastClick: polyfill to remove click delays on browsers with touch UIs.
-	 *
-	 * @codingstandard ftlabs-jsv2
-	 * @copyright The Financial Times Limited [All Rights Reserved]
-	 * @license MIT License (see LICENSE.txt)
-	 */
-
-	/*jslint browser:true, node:true*/
-	/*global define, Event, Node*/
-
-
 	/**
 	 * Instantiate fast-clicking listeners on the specified layer.
-	 *
+	 * 对特殊的图层设置快速点击监听器。
 	 * @constructor
 	 * @param {Element} layer The layer to listen on
 	 * @param {Object} [options={}] The options to override the defaults
@@ -140,11 +155,14 @@ FastClick.attach(document.body)
 
 		var methods = ['onMouse', 'onClick', 'onTouchStart', 'onTouchMove', 'onTouchEnd', 'onTouchCancel'];
 		var context = this;
+		// 将所有的 方法的 this 绑定到 该实例上。
+		// 为什么要绑定呢。。。
 		for (var i = 0, l = methods.length; i < l; i++) {
 			context[methods[i]] = bind(context[methods[i]], context);
 		}
 
 		// Set up event handlers as required
+		// 为layer 添加mouse 事件，触发时执行 this 对应的事件，事件冒泡。
 		if (deviceIsAndroid) {
 			layer.addEventListener('mouseover', this.onMouse, true);
 			layer.addEventListener('mousedown', this.onMouse, true);
@@ -239,7 +257,7 @@ FastClick.attach(document.body)
 
 	/**
 	 * BlackBerry requires exceptions.
-	 *
+	 * BlackBerry 黑莓手机。。。。
 	 * @type boolean
 	 */
 	var deviceIsBlackBerry10 = navigator.userAgent.indexOf('BB10') > 0;
@@ -275,7 +293,7 @@ FastClick.attach(document.body)
 		case 'video':
 			return true;
 		}
-
+		// 如果没有意外情况，检测是不是有needsclick的class，确定是不是需要。
 		return (/\bneedsclick\b/).test(target.className);
 	};
 
@@ -319,7 +337,7 @@ FastClick.attach(document.body)
 	 */
 	FastClick.prototype.sendClick = function(targetElement, event) {
 		var clickEvent, touch;
-
+		// 一些安卓设备，active的元素需要先blur。
 		// On some Android devices activeElement needs to be blurred otherwise the synthetic click will have no effect (#24)
 		if (document.activeElement && document.activeElement !== targetElement) {
 			document.activeElement.blur();
