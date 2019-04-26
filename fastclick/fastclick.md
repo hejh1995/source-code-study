@@ -25,7 +25,7 @@
 ## node:
 - 立即执行函数构建独立空间作用域。
 - 最开始的分号，防止前面代码没有写分号，解析出错。
-- 注释
+- 注释，在函数前面注释，说明用途和参数的含义，在函数内注释，说明意图就可以。
 - Node.prototype.removeEventListener------?
 - navigator.userAgent
 - 手机设备判断：
@@ -49,7 +49,16 @@
 	// Dispatch the event.
 	elem.dispatchEvent(event);
 	```
-- updateScrollParent
+- getTargetElementFromEventTarget， 用于获取目标元素，如果是文本节点，需要返回event.parentNode。
+- onTouchStart：
+	 - 如果是多点触摸（判断，event.targetTouches.length > 1），直接返回。
+	 - event.targetTouches 里面包含对象的属性：
+	 	 - clientX、clientY：触摸点在浏览器窗口中的横/纵坐标。
+		 - pageX、pageY：触摸点在页面中的横/纵坐标。  // 
+		 - screenX、screenY：触摸点在屏幕中横/纵坐标。
+		 - identifier：触摸点唯一标识ID
+	 - window.getSelection()方法可以返回一个Selection对象，用于表示用户选择的文本范围或插入符的当前位置。只有受信任的事件才会取消选择iOS上的文本
+	 - updateScrollParent， 如果target是可滚动图层的子元素，在发送该元素的事件是要确保不触发 父元素的滚动。
 ## 源码解析
 ```
 ;(function () {
