@@ -98,7 +98,7 @@
 	- document.elementFromPoint(x, y),x 和 y 是坐标数值, 不需要单位比如px, 返回当前文档上处于指定坐标位置最顶层的元素, 坐标是相对于包含该文档的浏览器窗口的左上角为原点来计算的, 通常 x 和 y 坐标都应为正数.
 	 - 如果点击的是label标签，targetelement应该是label对应的表单元素。
 	 - this.lastClickTime，上一次点击后的时间戳，this.trackingClickStart，本次点击开始的时间。阻止快速双击，超时就不进行click模拟了， 走原生流程。
-	 - 不需要原生的click时间的元素，阻止其他默认事件，并发送模拟的click。
+	 - 不需要原生的click事件的元素，阻止其他默认事件，并发送模拟的click。
 ## 源码解析
 ```
 // 构造函数
@@ -497,88 +497,63 @@ FastClick.prototype.sendClick = function(targetElement, event) {
 	};
 ```
 ```
-// 
+// 判断这次鼠标事件 是否有效。
 	FastClick.prototype.onMouse = function(event) {
 		// If a target element was never set (because a touch event was never fired) allow the event
 		if (!this.targetElement) {
 			return true;
 		}
-
+		// event.forwardedTouchEvent ， 给事件加的标记，方便跟踪
 		if (event.forwardedTouchEvent) {
 			return true;
 		}
 
-		// Programmatically generated events targeting a specific element should be permitted
+		// event 对象的 cancelable 事件，返回一个布尔值。如果用 preventDefault() 方法可以取消与事件关联的默认动作，则为 true，否则为 fasle。
 		if (!event.cancelable) {
 			return true;
 		}
-
-		// Derive and check the target element to see whether the mouse event needs to be permitted;
-		// unless explicitly enabled, prevent non-touch click events from triggering actions,
-		// to prevent ghost/doubleclicks.
+		// 不需要元素的click事件，或 已经取消了下次点击
 		if (!this.needsClick(this.targetElement) || this.cancelNextClick) {
-
-			// Prevent any user-added listeners declared on FastClick element from being fired.
+			// 阻止冒泡，并阻止该事件的其他事件被调用。
 			if (event.stopImmediatePropagation) {
 				event.stopImmediatePropagation();
 			} else {
-
-				// Part of the hack for browsers that don't support Event#stopImmediatePropagation (e.g. Android 2)
 				event.propagationStopped = true;
 			}
-
-			// Cancel the event
 			event.stopPropagation();
 			event.preventDefault();
 
 			return false;
 		}
-
-		// If the mouse event is permitted, return true for the action to go through.
+		// 允许 mouse 事件
 		return true;
 	};
 ```
 ```
-	/**
-	 * On actual clicks, determine whether this is a touch-generated click, a click action occurring
-	 * naturally after a delay after a touch (which needs to be cancelled to avoid duplication), or
-	 * an actual click which should be permitted.
-	 *
-	 * @param {Event} event
-	 * @returns {boolean}
-	 */
+// click事件。
 	FastClick.prototype.onClick = function(event) {
 		var permitted;
-
-		// It's possible for another FastClick-like library delivered with third-party code to fire a click event before FastClick does (issue #44). In that case, set the click-tracking flag back to false and return early. This will cause onTouchEnd to return early.
+		//1、出界会置为false，2成功模拟了一次完成tap并阻止click也会置为false，3、避免三方库影响
 		if (this.trackingClick) {
 			this.targetElement = null;
 			this.trackingClick = false;
 			return true;
 		}
 
-		// Very odd behaviour on iOS (issue #18): if a submit element is present inside a form and the user hits enter in the iOS simulator or clicks the Go button on the pop-up OS keyboard the a kind of 'fake' click event will be triggered with the submit-type input element as the target.
+		// Very odd behaviour on iOS (issue #18)
 		if (event.target.type === 'submit' && event.detail === 0) {
 			return true;
 		}
-
+		// 如果不允许鼠标事件， targetelement 置为 null，返回false， 如果允许鼠标事件，返回 true
 		permitted = this.onMouse(event);
-
-		// Only unset targetElement if the click is not permitted. This will ensure that the check for !targetElement in onMouse fails and the browser's click doesn't go through.
 		if (!permitted) {
 			this.targetElement = null;
 		}
-
-		// If clicks are permitted, return true for the action to go through.
 		return permitted;
 	};
-
-
-	/**
-	 * Remove all FastClick's event listeners.
-	 *
-	 * @returns {void}
-	 */
+```
+```
+//  移除事件绑定。
 	FastClick.prototype.destroy = function() {
 		var layer = this.layer;
 
@@ -594,20 +569,15 @@ FastClick.prototype.sendClick = function(targetElement, event) {
 		layer.removeEventListener('touchend', this.onTouchEnd, false);
 		layer.removeEventListener('touchcancel', this.onTouchCancel, false);
 	};
-
-
-	/**
-	 * Check whether FastClick is needed.
-	 *
-	 * @param {Element} layer The layer to listen on
-	 */
+```
+```
+// 不需要 fastclick 的 情况
 	FastClick.notNeeded = function(layer) {
 		var metaViewport;
 		var chromeVersion;
 		var blackberryVersion;
 		var firefoxVersion;
-
-		// Devices that don't support touch don't need FastClick
+		// 不支持 touch 事件
 		if (typeof window.ontouchstart === 'undefined') {
 			return true;
 		}
@@ -683,21 +653,16 @@ FastClick.prototype.sendClick = function(targetElement, event) {
 
 		return false;
 	};
-
-
-	/**
-	 * Factory method for creating a FastClick object
-	 *
-	 * @param {Element} layer The layer to listen on
-	 * @param {Object} [options={}] The options to override the defaults
-	 */
+```
+``` 
+// 执行构造函数初始化
 	FastClick.attach = function(layer, options) {
 		return new FastClick(layer, options);
 	};
-
-
+```
+```
+// 立即执行函数内部的。
 	if (typeof define === 'function' && typeof define.amd === 'object' && define.amd) {
-
 		// AMD. Register as an anonymous module.
 		define(function() {
 			return FastClick;
@@ -708,5 +673,4 @@ FastClick.prototype.sendClick = function(targetElement, event) {
 	} else {
 		window.FastClick = FastClick;
 	}
-}());
 ```
