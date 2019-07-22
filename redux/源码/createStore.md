@@ -8,7 +8,10 @@ let store = createStore(reducer, preloadedState, enhancer);
 - reducer , 是对reducer 进行修改的 reducer 函数。其中，combineReducers函数组合多个 reducer 生成。
 - preloadedState， store 的初始化状态，该参数可以省略。
 - enhancer是中间件通过applyMiddleware方法所生成的对createStore进行功能加强的函数。
-#### 3. 源码：
+#### 3. 疑难：
+- 为什么要有 nextListeners 和 currentListeners 两个内部变量？
+- 
+#### 4. 源码：
 ```
 import $$observable from 'symbol-observable'
 
@@ -45,6 +48,7 @@ export default function createStore(reducer, preloadedState, enhancer) {
     (typeof preloadedState === 'function' && typeof enhancer === 'function') ||
     (typeof enhancer === 'function' && typeof arguments[3] === 'function')
   ) {
+    // enhancer 只能传入一个
     throw new Error(
       'It looks like you are passing several store enhancers to ' +
         'createStore(). This is not supported. Instead, compose them ' +
@@ -53,15 +57,17 @@ export default function createStore(reducer, preloadedState, enhancer) {
   }
 
   if (typeof preloadedState === 'function' && typeof enhancer === 'undefined') {
+  // 当传入两个参数时，改变参数的含义
     enhancer = preloadedState
     preloadedState = undefined
   }
 
   if (typeof enhancer !== 'undefined') {
     if (typeof enhancer !== 'function') {
+    // enhancer 必须时一个函数
       throw new Error('Expected the enhancer to be a function.')
     }
-
+    // enhancer 对createStore 的功能进行增强
     return enhancer(createStore)(reducer, preloadedState)
   }
 
@@ -146,7 +152,7 @@ export default function createStore(reducer, preloadedState, enhancer) {
 
     ensureCanMutateNextListeners()
     nextListeners.push(listener)
-
+  // 发布订阅成功后，返回一个 取消订阅的方法
     return function unsubscribe() {
       if (!isSubscribed) {
         return
@@ -258,6 +264,7 @@ export default function createStore(reducer, preloadedState, enhancer) {
    * For more information, see the observable proposal:
    * https://github.com/tc39/proposal-observable
    */
+   // 提供与响应式库协同的入口
   function observable() {
     const outerSubscribe = subscribe
     return {
@@ -294,6 +301,7 @@ export default function createStore(reducer, preloadedState, enhancer) {
   // When a store is created, an "INIT" action is dispatched so that every
   // reducer returns their initial state. This effectively populates
   // the initial state tree.
+  // store 发生变化的时候，触发init事件，从而允许reducer 执行一些初始化的操作。
   dispatch({ type: ActionTypes.INIT })
 
   return {
