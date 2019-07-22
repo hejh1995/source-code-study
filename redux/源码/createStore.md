@@ -10,6 +10,8 @@ let store = createStore(reducer, preloadedState, enhancer);
 - enhancer是中间件通过applyMiddleware方法所生成的对createStore进行功能加强的函数。
 #### 3. 疑难：
 - 为什么要有 nextListeners 和 currentListeners 两个内部变量？
+  - subscibe 的时候，更改 nextListeners，返回的事件取消函数，从next中取消这个事件，并将 current 置为null。
+  - 在 disaptach 的时候，执行nextlisteners中的linstener，current 变为next。
 - 
 #### 4. 源码：
 ```
