@@ -3,7 +3,7 @@
 - 由flux演变而来，避免了flux的复杂性
 - 函数式编程---- curring【函数柯里化】、compose【复合函数】、纯函数
 #### 2. 目录文件结构
-- utils
+- utils：工程中使用的所有的工具文件
   - actionTypes.js：提供预设的 action
   - isPlainObject.js: 判断对象是否是一个普通对象
   - warning.js: 显示 warning 提示信息
