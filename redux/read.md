@@ -13,3 +13,4 @@
 - compose.js：函数组合
 - createStore.js：提供createStore API
 - index.js：入口文件
+#### 3. 源码地址： https://github.com/reduxjs/redux/tree/master/src
