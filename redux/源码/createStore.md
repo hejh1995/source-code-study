@@ -11,8 +11,11 @@ let store = createStore(reducer, preloadedState, enhancer);
 #### 3. 疑难：
 - 为什么要有 nextListeners 和 currentListeners 两个内部变量？
   - subscibe 的时候，更改 nextListeners，返回的事件取消函数，从next中取消这个事件，并将 current 置为null。
-  - 在 disaptach 的时候，执行nextlisteners中的linstener，current 变为next。
-- 
+  - 在 disaptach 的时候，执行nextlisteners中的linstener，current 变为next，两者合二为一。
+  - 目的是为了数据的一致性。有种情况，当redux 通知所有订阅者的时候，此时又由一个新的订阅者加入，如果只有currentListeners的话，当新的订阅者插进来的时候，就会打乱原有的顺序，从而引发一些严重问题。
+- 执行createStore 函数生成的store，可以直接修改它的state么？
+  - store.getState 函数返回的 state，并没有对 currentState 拷贝一份给我们，所有我们可以直接修改state，只是这么修改，是不会通知订阅者做数据更新的。
+  - reducer 不允许这么做，因为这样不会通知订阅者更新数据，
 #### 4. 源码：
 ```
 import $$observable from 'symbol-observable'
@@ -303,7 +306,9 @@ export default function createStore(reducer, preloadedState, enhancer) {
   // When a store is created, an "INIT" action is dispatched so that every
   // reducer returns their initial state. This effectively populates
   // the initial state tree.
+  
   // store 发生变化的时候，触发init事件，从而允许reducer 执行一些初始化的操作。
+  // 如果没有下面这个代码，此时的currentstate就是undefined，当我们dispatch 一个action的时候，就无法在currentstate基础上更新。所以需要拿到所有reducer默认的state，这样后续的dispatch一个action的时候，才可以更新我们的state。
   dispatch({ type: ActionTypes.INIT })
 
   return {
