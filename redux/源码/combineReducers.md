@@ -1,6 +1,8 @@
 #### 1.基本
 - 用于将多个reducer 整合生成一个 reducer。
-#### 2.问题
+#### 2.问题&学习到的
+- 把错误信息，放在一个函数里面处理。可以用于处理一个for 循环里面各个项错误的情况。
+- 
 #### 3.源码
 ```
 import ActionTypes from './utils/actionTypes'
